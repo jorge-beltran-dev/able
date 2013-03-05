@@ -17,19 +17,71 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 ?>
+
+<?php echo "<?php echo \$this->Form->create('{$modelClass}',array('url' => '','id'=>'index_form')); ?>\n"; ?>
 <div class="<?php echo $pluralVar; ?> index">
 	<h2><?php echo "<?php echo __('{$pluralHumanName}'); ?>"; ?></h2>
+
+	<div class="index_actions">
+	<ul>
+		<li>
+			<?php echo "<?php echo \$this->Html->link(
+							\$this->Html->image('iconos/agregar.png', array('alt' => '')) . ' ' . __('Nuevo'),
+							array('action' => 'add'),
+							array('escape' => false)
+						); ?>\n"; ?>
+		</li>
+
+		<?php if (ClassRegistry::init($modelClass)->hasField('active')): 
+		echo "<?php if(!empty(\${$pluralVar})):?>\n"; ?>
+		<li>
+
+		<?php
+			echo "<?php echo \$this->Html->link(
+					\$this->Html->image('iconos/unlocked.png',array('alt'=>'')).' '.__('Activar'),
+					array('action'=>'set_active', 1),
+					array('escape'=>false, 'class' => 'index_form_link')
+				);?>\n"; 
+		?>
+
+		</li>
+		<li>
+		<?php
+			echo "<?php echo \$this->Html->link(
+					\$this->Html->image('iconos/locked.png',
+					array('alt'=>'')).' '.__('Desactivar'),
+					array('action'=>'set_active', 0),
+					array('escape'=>false, 'class' => 'index_form_link')
+				);?>\n";
+		?>
+		</li>
+	<?php 
+	echo  "<?php endif; ?>";
+	endif;
+	?>
+	</ul>
+	</div>
+
 	<table cellpadding="0" cellspacing="0">
 	<tr>
-	<?php foreach ($fields as $field): ?>
+		<th><?php echo "<?php echo \$this->Form->checkbox('main', array('id'=>'main')); ?>"; ?></th>
+	<?php foreach ($fields as $field): 
+		if (in_array($field, array($primaryKey, 'modified'))) {
+			continue;
+		}
+	?>
 		<th><?php echo "<?php echo \$this->Paginator->sort('{$field}'); ?>"; ?></th>
 	<?php endforeach; ?>
-		<th class="actions"><?php echo "<?php echo __('Actions'); ?>"; ?></th>
+		<th class="actions"><?php echo "<?php echo __('Acciones'); ?>"; ?></th>
 	</tr>
 	<?php
 	echo "<?php foreach (\${$pluralVar} as \${$singularVar}): ?>\n";
 	echo "\t<tr>\n";
+	echo "\t\t<td><?php echo \$this->Form->checkbox('Selected.'.\${$singularVar}['{$modelClass}']['{$primaryKey}'] , array('class'=>'selected')); ?></td>\n";
 		foreach ($fields as $field) {
+			if (in_array($field, array($primaryKey, 'modified'))) {
+				continue;
+			}
 			$isKey = false;
 			if (!empty($associations['belongsTo'])) {
 				foreach ($associations['belongsTo'] as $alias => $details) {
@@ -44,11 +96,10 @@
 				echo "\t\t<td><?php echo h(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n";
 			}
 		}
-
 		echo "\t\t<td class=\"actions\">\n";
-		echo "\t\t\t<?php echo \$this->Html->link(__('View'), array('action' => 'view', \${$singularVar}['{$modelClass}']['{$primaryKey}'])); ?>\n";
-		echo "\t\t\t<?php echo \$this->Html->link(__('Edit'), array('action' => 'edit', \${$singularVar}['{$modelClass}']['{$primaryKey}'])); ?>\n";
-		echo "\t\t\t<?php echo \$this->Form->postLink(__('Delete'), array('action' => 'delete', \${$singularVar}['{$modelClass}']['{$primaryKey}']), null, __('Are you sure you want to delete # %s?', \${$singularVar}['{$modelClass}']['{$primaryKey}'])); ?>\n";
+		echo "\t\t\t<?php echo \$this->Html->link(__('Ver'), array('action' => 'view', \${$singularVar}['{$modelClass}']['{$primaryKey}'])); ?>\n";
+		echo "\t\t\t<?php echo \$this->Html->link(__('Editar'), array('action' => 'edit', \${$singularVar}['{$modelClass}']['{$primaryKey}'])); ?>\n";
+		echo "\t\t\t<?php echo \$this->Form->postLink(__('Eliminar'), array('action' => 'delete', \${$singularVar}['{$modelClass}']['{$primaryKey}']), null, __('¿Confirma que desea eliminar %s?', \${$singularVar}['{$modelClass}']['{$displayField}'])); ?>\n";
 		echo "\t\t</td>\n";
 	echo "\t</tr>\n";
 
@@ -58,35 +109,18 @@
 	<p>
 	<?php echo "<?php
 	echo \$this->Paginator->counter(array(
-	'format' => __('Page {:page} of {:pages}, showing {:current} records out of {:count} total, starting on record {:start}, ending on {:end}')
+	'format' => __('Página {:page} de {:pages}, viendo {:current} registros de {:count} totales, empezando en {:start}, finalizando en {:end}')
 	));
 	?>"; ?>
 	</p>
 	<div class="paging">
 	<?php
 		echo "<?php\n";
-		echo "\t\techo \$this->Paginator->prev('< ' . __('previous'), array(), null, array('class' => 'prev disabled'));\n";
+		echo "\t\techo \$this->Paginator->prev('< ' . __('anterior'), array(), null, array('class' => 'prev disabled'));\n";
 		echo "\t\techo \$this->Paginator->numbers(array('separator' => ''));\n";
-		echo "\t\techo \$this->Paginator->next(__('next') . ' >', array(), null, array('class' => 'next disabled'));\n";
+		echo "\t\techo \$this->Paginator->next(__('siguiente') . ' >', array(), null, array('class' => 'next disabled'));\n";
 		echo "\t?>\n";
 	?>
 	</div>
 </div>
-<div class="actions">
-	<h3><?php echo "<?php echo __('Actions'); ?>"; ?></h3>
-	<ul>
-		<li><?php echo "<?php echo \$this->Html->link(__('New " . $singularHumanName . "'), array('action' => 'add')); ?>"; ?></li>
-<?php
-	$done = array();
-	foreach ($associations as $type => $data) {
-		foreach ($data as $alias => $details) {
-			if ($details['controller'] != $this->name && !in_array($details['controller'], $done)) {
-				echo "\t\t<li><?php echo \$this->Html->link(__('List " . Inflector::humanize($details['controller']) . "'), array('controller' => '{$details['controller']}', 'action' => 'index')); ?> </li>\n";
-				echo "\t\t<li><?php echo \$this->Html->link(__('New " . Inflector::humanize(Inflector::underscore($alias)) . "'), array('controller' => '{$details['controller']}', 'action' => 'add')); ?> </li>\n";
-				$done[] = $details['controller'];
-			}
-		}
-	}
-?>
-	</ul>
-</div>
+<?php echo "<?php echo \$this->Form->end(); ?>"; ?>

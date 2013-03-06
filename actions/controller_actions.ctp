@@ -185,29 +185,6 @@
 
 	}
 
-		/********************************/
-
-		$this-><?php echo $currentModelName; ?>->id = $id;
-		if (!$this-><?php echo $currentModelName; ?>->exists()) {
-			throw new NotFoundException(__('Invalid <?php echo strtolower($singularHumanName); ?>'));
-		}
-		$this->request->onlyAllow('post', 'delete');
-		if ($this-><?php echo $currentModelName; ?>->delete()) {
-<?php if ($wannaUseSession): ?>
-			$this->Session->setFlash(__('<?php echo ucfirst(strtolower($singularHumanName)); ?> deleted'));
-			$this->redirect(array('action' => 'index'));
-<?php else: ?>
-			$this->flash(__('<?php echo ucfirst(strtolower($singularHumanName)); ?> deleted'), array('action' => 'index'));
-<?php endif; ?>
-		}
-<?php if ($wannaUseSession): ?>
-		$this->Session->setFlash(__('<?php echo ucfirst(strtolower($singularHumanName)); ?> was not deleted'));
-<?php else: ?>
-		$this->flash(__('<?php echo ucfirst(strtolower($singularHumanName)); ?> was not deleted'), array('action' => 'index'));
-<?php endif; ?>
-		$this->redirect(array('action' => 'index'));
-	}
-
 <?php if (ClassRegistry::init($currentModelName)->hasField('active')): ?>
 /**
  * <?php echo $admin ?>set_active method

@@ -17,10 +17,44 @@
  * @license       MIT License (http://www.opensource.org/licenses/mit-license.php)
  */
 ?>
-
-<?php echo "<?php echo \$this->Form->create('{$modelClass}',array('url' => '','id'=>'index_form')); ?>\n"; ?>
+<?php
+echo "<?php\n";
+echo "App::import('Vendor', 'Funciones');\n";
+echo "echo \$this->Form->create('{$modelClass}',array('url' => '','id'=>'index_form'));\n";
+echo "?>\n"; 
+?>
 <div class="<?php echo $pluralVar; ?> index">
 	<h2><?php echo "<?php echo __('{$pluralHumanName}'); ?>"; ?></h2>
+
+	<?php
+		if (!empty($associations['belongsTo'])) {
+			echo "\t<?php\n";
+			echo "\t?>\n";
+		}
+	?>
+
+	<fieldset class="search">
+		<legend><?php echo "<?php echo __('Búsqueda de {$pluralHumanName}'); ?>"; ?></legend>
+	<?php
+		echo "\t<?php\n";
+		echo "\t\techo \$this->Form->create('{$modelClass}');\n";
+		echo "\t\techo '<div id=\"open_search\">';\n";
+		echo "\t\techo \$this->Form->input('open_search', array('label' => __('Búsqueda libre')));\n";
+		echo "\t\techo '</div>';\n";
+		echo "\t\techo '<div id=\"advanced_search\" class=\"hidden\">';\n";
+		foreach ($fields as $field) {
+			if (in_array($field, array('id', 'created', 'modified', 'active'))) {
+				continue;
+			}
+			echo "\t\techo \$this->Form->input('{$field}');\n";
+		}
+		echo "\t\techo '</div>';\n";
+		echo "\t\t\$link = \$this->Html->link(__('Filtro avanzado'), array(), array('class' => 'advanced_filter'));\n";
+		echo "\t\techo \$this->Form->submit(__('Buscar'), array('after' => \$link));\n";
+   	    echo "\t\techo \$this->Form->end();\n";
+		echo "\t?>\n";
+	?>
+	</fieldset>
 
 	<div class="index_actions">
 	<ul>
@@ -29,6 +63,13 @@
 							\$this->Html->image('iconos/agregar.png', array('alt' => '')) . ' ' . __('Nuevo'),
 							array('action' => 'add'),
 							array('escape' => false)
+						); ?>\n"; ?>
+		</li>
+		<li>
+			<?php echo "<?php echo \$this->Html->link(
+							\$this->Html->image('iconos/cross.png', array('alt' => '')) . ' ' . __('Eliminar'),
+							array('action' => 'delete'),
+							array('escape' => false, 'class' => 'index_form_link')
 						); ?>\n"; ?>
 		</li>
 
@@ -93,7 +134,29 @@
 				}
 			}
 			if ($isKey !== true) {
-				echo "\t\t<td><?php echo h(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n";
+				if ($field == 'active') {
+					echo "\t\t<td class=\"icon\">
+						<?php if (\${$singularVar}['{$modelClass}']['{$field}']) {
+							\$image = \$this->Html->image('iconos/unlocked.png', array('alt' => __('Desactivar')));
+							echo \$this->Html->link(
+								\$image, 
+								array('action' => 'set_active', 0, \${$singularVar}['{$modelClass}']['{$primaryKey}']),
+								array('escape' => false)
+							);
+						} else {
+							\$image = \$this->Html->image('iconos/locked.png', array('alt' => __('Activar')));
+							echo \$this->Html->link(
+								\$image, 
+								array('action' => 'set_active', 1, \${$singularVar}['{$modelClass}']['{$primaryKey}']),
+								array('escape' => false)
+							);
+						}\n
+					?></td>";
+				} elseif (in_array(strtolower(ClassRegistry::init($modelClass)->getColumnType($field)), array('date', 'datetime'))) {
+					echo "\t\t<td><?php echo mostrar_fecha(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n"; 
+				} else {
+					echo "\t\t<td><?php echo h(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n";
+				}
 			}
 		}
 		echo "\t\t<td class=\"actions\">\n";

@@ -27,6 +27,7 @@
 	public function <?php echo $admin ?>index() {
 		$this-><?php echo $currentModelName ?>->recursive = 0;
 		$this->set('<?php echo $pluralName ?>', $this->paginate());
+		$this->_setSelects();
 	}
 
 /**
@@ -135,9 +136,57 @@
  * @throws NotFoundException
  * @throws MethodNotAllowedException
  * @param string $id
+ * @param boolean $confirm
  * @return void
  */
-	public function <?php echo $admin; ?>delete($id = null) {
+	public function <?php echo $admin; ?>delete($id = null, $confirm = false) {
+		if (!empty($id)) {
+			$ids = array($id);
+		} else {
+			$ids = array();
+		}
+		
+		if(!empty($this->request->data['Selected'])) {
+			foreach ($this->request->data['Selected'] as $selected_id => $selected) {
+				if ($selected) {
+					$ids[] = $selected_id;
+				}
+			}
+		}
+
+		if (!empty($ids) && confirm) {
+			$error = false;
+			foreach ($ids as $id) {
+				$this-><?php echo $currentModelName; ?>->id = $id;
+				if (!$this-><?php echo $currentModelName; ?>->delete()) {
+					$error = true;	
+				} 
+				if ($error) {
+<?php if ($wannaUseSession): ?>
+					$this->Session->setFlash(__('Fallo al realizar la operación'));
+<?php else: ?>
+					$this->flash(__('Fallo al realizar la operación'), array('action' => 'index'));
+<?php endif; ?>
+				} else {
+<?php if ($wannaUseSession): ?>
+					$this->Session->setFlash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> eliminados'));
+<?php else: ?>
+					$url = array('action' => 'index');
+					$this->flash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> eliminados'), $url);
+<?php endif; ?>
+				}
+			}
+			$this->redirect(array('action' => 'index'));
+		} elseif (empty($ids)) {
+			throw new NotFoundException(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> no encontrados'));	
+			$this->redirect(array('action' => 'index'));
+		}
+		$this->set(compact('ids'));
+
+	}
+
+		/********************************/
+
 		$this-><?php echo $currentModelName; ?>->id = $id;
 		if (!$this-><?php echo $currentModelName; ?>->exists()) {
 			throw new NotFoundException(__('Invalid <?php echo strtolower($singularHumanName); ?>'));
@@ -157,4 +206,72 @@
 		$this->flash(__('<?php echo ucfirst(strtolower($singularHumanName)); ?> was not deleted'), array('action' => 'index'));
 <?php endif; ?>
 		$this->redirect(array('action' => 'index'));
+	}
+
+<?php if (ClassRegistry::init($currentModelName)->hasField('active')): ?>
+/**
+ * <?php echo $admin ?>set_active method
+ *
+ * @throws NotFoundException
+ * @throws MethodNotAllowedException
+ * @param int $active
+ * @param string $id
+ * @return void
+ */
+
+	public function set_active($active = 0, $id = null) {		
+		if (!empty($id)) {
+			$ids = array($id);
+		} else {
+			$ids = array();
+		}
+		
+		if(!empty($this->request->data['Selected'])) {
+			foreach ($this->request->data['Selected'] as $selected_id => $selected) {
+				if ($selected) {
+					$ids[] = $selected_id;
+				}
+			}
+		}
+
+		if (!empty($ids)) {
+			$error = false;
+			foreach ($ids as $id) {
+				$this-><?php echo $currentModelName; ?>->id = $id;
+				if (!$this-><?php echo $currentModelName; ?>->save(compact('active'))) {
+					$error = true;	
+				} 
+				if ($error) {
+<?php if ($wannaUseSession): ?>
+					$this->Session->setFlash(__('Fallo al realizar la operación'));
+<?php else: ?>
+					$this->flash(__('Fallo al realizar la operación'), array('action' => 'index'));
+<?php endif; ?>
+				} else {
+<?php if ($wannaUseSession): ?>
+					($active)?$this->Session->setFlash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> activados')):$this->Session->setFlash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> desactivados'));
+<?php else: ?>
+					$url = array('action' => 'index');
+					($active)?$this->flash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> activados'), $url):$this->flash(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> desactivados'), $url);
+<?php endif; ?>
+				}
+			}
+		} else {
+			throw new NotFoundException(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> no encontrados'));	
+		}
+		$this->redirect(array('action' => 'index'));
+	}
+
+<?php endif; //hasField ative ?>
+
+	protected function _setSelects() {
+	<?php
+		$vars = array();
+		foreach ($modelObj->belongsTo as $alias => $details) {
+			$varName = Inflector::tableize($alias);
+			$vars[] = $varName;
+			echo "\t\${$varName} = ClassRegistry::init('{$alias}')->find('list');\n";
+		}
+	?>
+		$this->set(compact('<?php echo implode("', '", $vars); ?>'));
 	}

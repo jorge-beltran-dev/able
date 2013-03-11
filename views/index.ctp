@@ -20,7 +20,7 @@
 <?php
 echo "<?php\n";
 echo "App::import('Vendor', 'Funciones');\n";
-echo "echo \$this->Form->create('{$modelClass}',array('url' => '','id'=>'index_form'));\n";
+echo "echo \$this->Form->create('{$modelClass}',array('url' => array('action' => 'index'),'id'=>'index_form'));\n";
 echo "?>\n"; 
 ?>
 <div class="<?php echo $pluralVar; ?> index">
@@ -43,10 +43,15 @@ echo "?>\n";
 		echo "\t\techo '</div>';\n";
 		echo "\t\techo '<div id=\"advanced_search\" class=\"hidden\">';\n";
 		foreach ($fields as $field) {
-			if (in_array($field, array('id', 'created', 'modified', 'active'))) {
+			if (in_array($field, array($primaryKey, 'created', 'modified', 'active', 'avatar'))) {
 				continue;
 			}
-			echo "\t\techo \$this->Form->input('{$field}');\n";
+			$columnType = strtolower(ClassRegistry::init($modelClass)->getColumnType($field));
+			if (in_array($columnType, array('date', 'datetime'))) {
+					echo "\t\techo \$this->Form->input('{$field}', array('type' => 'text', 'class' => '{$columnType}', 'required' => false));\n";
+			} else {
+				echo "\t\techo \$this->Form->input('{$field}', array('required' => false));\n";
+			}
 		}
 		echo "\t\techo '</div>';\n";
 		echo "\t\t\$link = \$this->Html->link(__('Filtro avanzado'), array(), array('class' => 'advanced_filter'));\n";
@@ -65,6 +70,7 @@ echo "?>\n";
 							array('escape' => false)
 						); ?>\n"; ?>
 		</li>
+		<?php echo "<?php if(!empty(\${$pluralVar})):?>\n"; ?>
 		<li>
 			<?php echo "<?php echo \$this->Html->link(
 							\$this->Html->image('iconos/cross.png', array('alt' => '')) . ' ' . __('Eliminar'),
@@ -73,8 +79,8 @@ echo "?>\n";
 						); ?>\n"; ?>
 		</li>
 
-		<?php if (ClassRegistry::init($modelClass)->hasField('active')): 
-		echo "<?php if(!empty(\${$pluralVar})):?>\n"; ?>
+		<?php if (ClassRegistry::init($modelClass)->hasField('active')): ?> 
+
 		<li>
 
 		<?php
@@ -97,8 +103,8 @@ echo "?>\n";
 		?>
 		</li>
 	<?php 
-	echo  "<?php endif; ?>";
 	endif;
+	echo  "<?php endif; ?>";
 	?>
 	</ul>
 	</div>
@@ -151,9 +157,16 @@ echo "?>\n";
 								array('escape' => false)
 							);
 						}\n
-					?></td>";
+					?></td>\n";
+				} elseif ($field == 'avatar') {
+					echo "\t\t<td>
+						<?php
+							echo \$this->Html->image('{$modelClass}/' . \${$singularVar}['{$modelClass}']['{$field}'] . ',fitCrop,100,100.jpg');
+					?></td>\n";
 				} elseif (in_array(strtolower(ClassRegistry::init($modelClass)->getColumnType($field)), array('date', 'datetime'))) {
 					echo "\t\t<td><?php echo mostrar_fecha(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n"; 
+				} elseif (strtolower(ClassRegistry::init($modelClass)->getColumnType($field)) == 'text') {
+					echo "\t\t<td><?php echo recortar(\${$singularVar}['{$modelClass}']['{$field}'], 250); ?>&nbsp;</td>\n"; 
 				} else {
 					echo "\t\t<td><?php echo h(\${$singularVar}['{$modelClass}']['{$field}']); ?>&nbsp;</td>\n";
 				}

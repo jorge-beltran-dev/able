@@ -26,7 +26,8 @@
  */
 	public function <?php echo $admin ?>index() {
 		$this-><?php echo $currentModelName ?>->recursive = 0;
-		$this->set('<?php echo $pluralName ?>', $this->paginate());
+		$conditions = $this->_parseSearch();
+		$this->set('<?php echo $pluralName ?>', $this->paginate($conditions));
 		$this->_setSelects();
 	}
 
@@ -82,6 +83,7 @@
 		echo "\t\t\$this->set(compact(".join(', ', $compact)."));\n";
 	endif;
 ?>
+		$this->render('<?php echo $admin ?>edit');
 	}
 
 <?php $compact = array(); ?>
@@ -154,7 +156,7 @@
 			}
 		}
 
-		if (!empty($ids) && confirm) {
+		if (!empty($ids) && $confirm) {
 			$error = false;
 			foreach ($ids as $id) {
 				$this-><?php echo $currentModelName; ?>->id = $id;
@@ -181,7 +183,10 @@
 			throw new NotFoundException(__('<?php echo ucfirst(strtolower($pluralHumanName)); ?> no encontrados'));	
 			$this->redirect(array('action' => 'index'));
 		}
-		$this->set(compact('ids'));
+		$<?php echo $pluralName; ?> = $this-><?php echo $currentModelName; ?>->find('all', array(
+			'conditions' => array('<?php echo $currentModelName; ?>.<?php echo $primaryKey; ?>' => $ids)
+		));
+		$this->set(compact('<?php echo $pluralName; ?>'));
 
 	}
 
@@ -189,14 +194,14 @@
 /**
  * <?php echo $admin ?>set_active method
  *
- * @throws NotFoundException
+ * @throws NotFoundExceptiona
  * @throws MethodNotAllowedException
  * @param int $active
  * @param string $id
  * @return void
  */
 
-	public function set_active($active = 0, $id = null) {		
+	public function <?php echo $admin; ?>set_active($active = 0, $id = null) {		
 		if (!empty($id)) {
 			$ids = array($id);
 		} else {
@@ -240,15 +245,3 @@
 	}
 
 <?php endif; //hasField ative ?>
-
-	protected function _setSelects() {
-	<?php
-		$vars = array();
-		foreach ($modelObj->belongsTo as $alias => $details) {
-			$varName = Inflector::tableize($alias);
-			$vars[] = $varName;
-			echo "\t\${$varName} = ClassRegistry::init('{$alias}')->find('list');\n";
-		}
-	?>
-		$this->set(compact('<?php echo implode("', '", $vars); ?>'));
-	}

@@ -26,7 +26,13 @@
 	}
 ?>
 <div class="<?php echo $pluralVar; ?> form">
-<?php echo "<?php echo \$this->Form->create('{$modelClass}'); ?>\n"; ?>
+<?php 
+if (ClassRegistry::init($modelClass)->hasField('avatar')) {
+	echo "<?php echo \$this->Form->create('{$modelClass}', array('type' => 'file')); ?>\n"; 
+} else {
+	echo "<?php echo \$this->Form->create('{$modelClass}'); ?>\n"; 
+}
+?>
 	<fieldset>
 		<legend><?php printf("<?php echo __('%s %s'); ?>", $actionTitle , $singularHumanName); ?></legend>
 <?php
@@ -35,7 +41,14 @@
 			if (strpos($action, 'add') !== false && $field == $primaryKey) {
 				continue;
 			} elseif (!in_array($field, array('created', 'modified', 'updated'))) {
-				echo "\t\techo \$this->Form->input('{$field}');\n";
+				$columnType = strtolower(ClassRegistry::init($modelClass)->getColumnType($field));
+				if (in_array($columnType, array('date', 'datetime'))) {
+					echo "\t\techo \$this->Form->input('{$field}', array('type' => 'text', 'class' => '{$columnType}'));\n";
+				} elseif ($field == 'avatar') {
+					echo "\t\techo \$this->Form->input('file', array('type' => 'file', 'label' => __('Imagen')));\n";
+				} else {
+					echo "\t\techo \$this->Form->input('{$field}');\n";
+				}
 			}
 		}
 		if (!empty($associations['hasAndBelongsToMany'])) {

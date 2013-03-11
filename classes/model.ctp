@@ -74,10 +74,41 @@ if ($displayField): ?>
 
 <?php endif;
 
+if (ClassRegistry::init($name)->hasField('avatar')): 
+	$dest = MEDIA_TRANSFER . 'img' . DS . $name;
+	$orig = MEDIA_TRANSFER . 'img';
+	if (!is_dir($dest)) {
+		shell_exec("mkdir $dest");
+		shell_exec("chmod -R 777 $dest");
+	}
+
+	if (!file_exists($dest . DS . 'placeholder.jpg')) {
+		shell_exec('cp '. $orig . DS . 'placeholder.jpg ' . $dest . DS . 'placeholder.jpg');
+		shell_exec('chmod -R 777 ' . $dest . DS . 'placeholder.jpg');
+	}
+?>
+/**
+ * Behaviors
+ *
+ * @var array
+ */
+
+	public $actsAs = array(
+		'Media.Transfer' => array(
+			'trustClient' => false,
+	        'transferDirectory' => MEDIA_TRANSFER,
+    	    'createDirectory' => true,	
+		)
+	);
+<?php endif;
+
 if (!empty($validate)):
 	echo "/**\n * Validation rules\n *\n * @var array\n */\n";
 	echo "\tpublic \$validate = array(\n";
 	foreach ($validate as $field => $validations):
+		if ($field == 'avatar') {
+			$validations['uuid'] = 'uuidOrPlaceholder';
+		}
 		echo "\t\t'$field' => array(\n";
 		foreach ($validations as $key => $validator):
 			echo "\t\t\t'$key' => array(\n";

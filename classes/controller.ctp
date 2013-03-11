@@ -76,7 +76,35 @@ class <?php echo $controllerName; ?>Controller extends <?php echo $plugin; ?>App
 		echo ");\n\n";
 	endif;
 
-	echo trim($actions) . "\n";
 
-endif; ?>
+?>
+/**
+ * beforeFilter method 
+ *
+ * @return void
+ */
+
+	public function beforeFilter() {
+		if (in_array($this->params['action'], array('index', 'admin_index', 'delete', 'admin_delete', 'set_active', 'admin_set_active'))) {
+			$this->Security->validatePost = false;
+			$this->Security->csrfCheck = false;
+		}
+		parent::beforeFilter();
+	}
+
+<?php
+	echo trim($actions) . "\n";
+ endif; ?>
+
+	protected function _setSelects() {
+	<?php
+		$vars = array();
+		foreach ($modelObj->belongsTo as $alias => $details) {
+			$varName = Inflector::tableize($alias);
+			$vars[] = $varName;
+			echo "\t\t\${$varName} = ClassRegistry::init('{$alias}')->find('list');\n";
+		}
+	?>
+		$this->set(compact('<?php echo implode("', '", $vars); ?>'));
+	}
 }
